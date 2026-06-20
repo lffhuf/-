@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>个人网盘 - 管理面板</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=20260620">
+    <style>
+        .btn-admin-save {
+            padding: 10px 28px;
+            background: linear-gradient(135deg, rgba(79, 195, 247, 0.2), rgba(79, 195, 247, 0.08));
+            border: 2px solid rgba(79, 195, 247, 0.4);
+            border-radius: 12px;
+            color: #4fc3f7;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-admin-save::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(79, 195, 247, 0.15), transparent);
+            transition: left 0.5s;
+        }
+        .btn-admin-save:hover::before {
+            left: 100%;
+        }
+        .btn-admin-save:hover {
+            background: linear-gradient(135deg, rgba(79, 195, 247, 0.3), rgba(79, 195, 247, 0.15));
+            border-color: rgba(79, 195, 247, 0.7);
+            color: #81d4fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.25);
+        }
+        .btn-admin-save:active {
+            transform: translateY(0);
+        }
+        .btn-admin-save[style*="#dc3545"] {
+            background: linear-gradient(135deg, rgba(220,53,69,0.25), rgba(220,53,69,0.1)) !important;
+            border: 2px solid rgba(220,53,69,0.5) !important;
+            color: #ff6b7a !important;
+        }
+        .btn-admin-save[style*="#dc3545"]:hover {
+            background: linear-gradient(135deg, rgba(220,53,69,0.4), rgba(220,53,69,0.2)) !important;
+            border-color: rgba(220,53,69,0.8) !important;
+            color: #ff8a94 !important;
+            box-shadow: 0 4px 15px rgba(220,53,69,0.3) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    
+    <nav class="navbar glass">
+        <div class="nav-brand">🔐 管理面板</div>
+        <a href="/admin" class="btn-small">退出</a>
+    </nav>
+    
+    <div class="dashboard">
+        <h2>📊 系统概览</h2>
+        
+        <div class="stats-grid">
+            <div class="stat-card glass">
+                <h3>👥 用户总数</h3>
+                <p class="stat-number">{{ total_users }}</p>
+            </div>
+            <div class="stat-card glass">
+                <h3>📁 文件总数</h3>
+                <p class="stat-number">{{ total_files }}</p>
+            </div>
+            <div class="stat-card glass">
+                <h3>💾 总存储</h3>
+                <p class="stat-number">{{ storage | filesizeformat }}</p>
+            </div>
+        </div>
+        
+        <div class="admin-section">
+            <h3>👥 最近注册用户</h3>
+            <table class="glass-table">
+                <tr><th>用户名</th><th>邮箱</th><th>注册时间</th></tr>
+                {% for user in recent_users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <div class="admin-section">
+            <h3>📁 最近上传文件</h3>
+            <table class="glass-table">
+                <tr><th>文件名</th><th>用户</th><th>大小</th><th>分享状态</th><th>预览次数</th></tr>
+                {% for f in recent_files %}
+                <tr>
+                    <td>{{ f.name }}</td>
+                    <td>{{ f.owner.username }}</td>
+                    <td>{{ f.size | filesizeformat }}</td>
+                    <td>{% if f.is_shared %}✅{% else %}❌{% endif %}</td>
+                    <td>{{ f.views }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <!-- 邮件服务配置 -->
+        <div class="admin-section">
+            <h3>📧 邮件服务配置</h3>
+            <p style="color:#aaa;font-size:13px">配置SMTP服务以启用验证码邮件功能</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px">
+                <div class="form-group">
+                    <label>SMTP服务器</label>
+                    <input type="text" id="mail-server" placeholder="smtp.qq.com" value="{{ mail_server }}">
+                </div>
+                <div class="form-group">
+                    <label>端口</label>
+                    <input type="number" id="mail-port" placeholder="587" value="{{ mail_port }}">
+                </div>
+                <div class="form-group">
+                    <label>发件邮箱</label>
+                    <input type="email" id="mail-username" placeholder="your@qq.com" value="{{ mail_username }}">
+                </div>
+                <div class="form-group">
+                    <label>授权码/密码</label>
+                    <input type="password" id="mail-password" placeholder="邮箱授权码" value="">
+                </div>
+            </div>
+            <button class="btn-admin-save" onclick="saveMailConfig()" style="margin-top:10px">📧 保存邮件配置</button>
+            <span id="mail-config-msg" style="margin-left:10px;color:#4CAF50"></span>
+        </div>
+        
+        <!-- 管理设置 -->
+        <div class="admin-section">
+            <h3>⚙️ 管理设置</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px">
+                <div class="form-group">
+                    <label>管理员用户名</label>
+                    <input type="text" id="admin-username" value="{{ admin_username }}">
+                </div>
+                <div class="form-group">
+                    <label>管理员密码</label>
+                    <input type="password" id="admin-password" placeholder="新密码留空不变">
+                </div>
+            </div>
+            <button class="btn-admin-save" onclick="saveAdminConfig()" style="margin-top:10px">⚙️ 保存管理配置</button>
+            <span id="admin-config-msg" style="margin-left:10px;color:#4CAF50"></span>
+        </div>
+        
+        <!-- 验证码管理 -->
+        <div class="admin-section">
+            <h3>🔑 验证码记录</h3>
+            <button class="btn-admin-save" style="margin-top:10px;background:#dc3545;border-color:#dc3545" onclick="clearOtpStore()">🗑️ 清除所有验证码记录</button>
+            <p style="color:#aaa;font-size:13px;margin-top:8px">清除内存中待验证的验证码记录</p>
+        </div>
+    </div>
+    
+    <script>
+        function saveMailConfig() {
+            const data = {
+                mail_server: document.getElementById('mail-server').value,
+                mail_port: document.getElementById('mail-port').value,
+                mail_username: document.getElementById('mail-username').value,
+                mail_password: document.getElementById('mail-password').value
+            };
+            fetch('/api/admin/settings/mail', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(d => {
+                const msg = document.getElementById('mail-config-msg');
+                if (d.success) { msg.textContent = '✅ 保存成功'; msg.style.color = '#4CAF50'; }
+                else { msg.textContent = '❌ ' + d.error; msg.style.color = '#dc3545'; }
+            });
+        }
+        
+        function saveAdminConfig() {
+            const data = {
+                admin_username: document.getElementById('admin-username').value,
+                admin_password: document.getElementById('admin-password').value
+            };
+            fetch('/api/admin/settings/admin', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(d => {
+                const msg = document.getElementById('admin-config-msg');
+                if (d.success) { msg.textContent = '✅ 保存成功'; msg.style.color = '#4CAF50'; }
+                else { msg.textContent = '❌ ' + d.error; msg.style.color = '#dc3545'; }
+            });
+        }
+        
+        function clearOtpStore() {
+            fetch('/api/admin/clear-otp', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                alert(d.success ? '✅ 已清除' : '❌ ' + d.error);
+            });
+        }
+    </script>
+</body>
+</html>

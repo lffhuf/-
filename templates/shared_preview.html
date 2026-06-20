@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>个人网盘 - 分享预览</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=20260620">
+    <style>
+    .preview-content { max-width: 100%; overflow: auto; }
+    .video-container { max-width: 100%; background: #000; }
+    .video-container video { max-width: 100%; max-height: 80vh; }
+    .preview-toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <nav class="navbar glass">
+        <a href="javascript:history.back()" class="btn-small">← 返回</a>
+        <span>{{ file.display_name }}</span>
+    </nav>
+    
+    <div class="preview-container glass">
+        <h2>📄 {{ file.display_name }}</h2>
+        <div class="file-meta">
+            <p>大小：{{ file.size | filesizeformat }}</p>
+            <p>类型：{{ file.file_type | upper }}</p>
+            <p>预览次数：{{ file.views }}</p>
+        </div>
+        
+        <div class="preview-toolbar">
+            <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载文件</a>
+        </div>
+        
+        <div class="preview-content">
+            {% if file.file_type in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'] %}
+                <div class="image-preview">
+                    <img src="/static/uploads/{{ file.filename }}" alt="{{ file.display_name }}" style="max-width:100%;max-height:70vh;object-fit:contain">
+                </div>
+            {% elif file.file_type in ['mp4', 'avi', 'mkv', 'mov', 'webm', 'wmv', 'flv'] %}
+                <div class="video-container">
+                    <video controls autoplay>
+                        <source src="/static/uploads/{{ file.filename }}" type="video/{{ file.file_type }}">
+                        您的浏览器不支持视频播放
+                    </video>
+                </div>
+            {% elif file.file_type in ['mp3', 'wav', 'flac', 'ogg'] %}
+                <div class="audio-container">
+                    <p style="font-size:60px;text-align:center;margin:20px 0">🎵</p>
+                    <p style="text-align:center">{{ file.display_name }}</p>
+                    <audio controls autoplay style="width:100%">
+                        <source src="/static/uploads/{{ file.filename }}" type="audio/{{ file.file_type }}">
+                        您的浏览器不支持音频播放
+                    </audio>
+                </div>
+            {% elif file.file_type == 'pdf' %}
+                <iframe src="/static/uploads/{{ file.filename }}" style="width:100%;height:70vh;border:none"></iframe>
+            {% elif file.file_type in ['doc', 'docx'] %}
+                <div class="file-type-info">
+                    <div style="text-align:center;padding:30px">
+                        <p style="font-size:60px">📝</p>
+                        <h3>Word 文档</h3>
+                        <p>文件：{{ file.display_name }}</p>
+                        <p>大小：{{ file.size | filesizeformat }}</p>
+                    </div>
+                    <div class="preview-toolbar" style="justify-content:center">
+                        <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载后使用 Word/WPS 打开</a>
+                    </div>
+                </div>
+            {% elif file.file_type in ['xls', 'xlsx'] %}
+                <div class="file-type-info">
+                    <div style="text-align:center;padding:30px">
+                        <p style="font-size:60px">📊</p>
+                        <h3>Excel 表格</h3>
+                        <p>文件：{{ file.display_name }}</p>
+                        <p>大小：{{ file.size | filesizeformat }}</p>
+                    </div>
+                    <div class="preview-toolbar" style="justify-content:center">
+                        <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载后使用 Excel/WPS 打开</a>
+                    </div>
+                </div>
+            {% elif file.file_type in ['ppt', 'pptx'] %}
+                <div class="file-type-info">
+                    <div style="text-align:center;padding:30px">
+                        <p style="font-size:60px">📑</p>
+                        <h3>PowerPoint 演示文稿</h3>
+                        <p>文件：{{ file.display_name }}</p>
+                        <p>大小：{{ file.size | filesizeformat }}</p>
+                    </div>
+                    <div class="preview-toolbar" style="justify-content:center">
+                        <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载后使用 PowerPoint/WPS 打开</a>
+                    </div>
+                </div>
+            {% elif file.file_type == 'csv' %}
+                <div class="file-type-info">
+                    <h3>📋 CSV 数据文件</h3>
+                    <pre style="background:#1a1a2e;padding:15px;border-radius:8px;max-height:400px;overflow:auto">{{ open('/static/uploads/' + file.filename).read() }}</pre>
+                    <div class="preview-toolbar" style="justify-content:center">
+                        <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载</a>
+                    </div>
+                </div>
+            {% elif file.file_type == 'txt' %}
+                <pre style="white-space:pre-wrap;word-break:break-all;max-height:70vh;overflow:auto;background:#1a1a2e;padding:15px;border-radius:8px">{{ open('/static/uploads/' + file.filename).read() }}</pre>
+            {% elif file.file_type in ['py', 'js', 'html', 'css', 'json', 'xml', 'md', 'log'] %}
+                <div class="file-type-info">
+                    <h3>💻 {{ file.file_type | upper }} 文件</h3>
+                    <pre style="background:#1a1a2e;padding:15px;border-radius:8px;max-height:70vh;overflow:auto;font-size:13px">{{ open('/static/uploads/' + file.filename).read() }}</pre>
+                    <div class="preview-toolbar" style="justify-content:center">
+                        <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="file-type-info">
+                    <div style="text-align:center;padding:30px">
+                        <p style="font-size:60px">📦</p>
+                        <h3>{{ file.file_type | upper }} 文件</h3>
+                        <p>文件：{{ file.display_name }}</p>
+                        <p>大小：{{ file.size | filesizeformat }}</p>
+                    </div>
+                    <div class="preview-toolbar" style="justify-content:center">
+                        <a href="/static/uploads/{{ file.filename }}" class="btn-glass">📥 下载文件</a>
+                    </div>
+                    <p style="text-align:center;color:#888;margin-top:15px">🔒 文件仅供预览，请下载使用完整版本</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

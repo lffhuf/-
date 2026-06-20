@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>个人网盘 - 账户设置</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=20260620b">
+    <style>
+        .form-group select {
+            padding: 12px 16px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            border-radius: 10px;
+            background: rgba(79, 195, 247, 0.06);
+            backdrop-filter: blur(5px);
+            color: #4fc3f7;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+            cursor: pointer;
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234fc3f7' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        .form-group select:hover {
+            border-color: rgba(79, 195, 247, 0.5);
+            background: rgba(79, 195, 247, 0.1);
+        }
+        .form-group select:focus {
+            border-color: rgba(79, 195, 247, 0.7);
+            background: rgba(79, 195, 247, 0.12);
+            box-shadow: 0 0 10px rgba(79, 195, 247, 0.15);
+        }
+        .form-group select option {
+            background: rgba(20, 20, 40, 0.95);
+            color: #4fc3f7;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <nav class="navbar glass">
+        <a href="/dashboard" class="btn-small">← 返回</a>
+        <span>⚙️ 账户设置</span>
+    </nav>
+    
+    <div class="settings-container glass">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- 修改密码 -->
+        <div class="settings-section">
+            <h3>🔑 修改密码</h3>
+            <form method="POST">
+                <div class="form-group">
+                    <label>原密码</label>
+                    <input type="password" name="old_password" required>
+                </div>
+                <div class="form-group">
+                    <label>新密码（至少6位）</label>
+                    <input type="password" name="new_password" minlength="6" required>
+                </div>
+                <button type="submit" class="btn-primary" name="action" value="password" style="padding:10px 28px;background:linear-gradient(135deg,rgba(79,195,247,0.2),rgba(79,195,247,0.08));border:2px solid rgba(79,195,247,0.4);border-radius:12px;color:#4fc3f7;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit;position:relative;overflow:hidden">🔑 修改密码</button>
+            </form>
+        </div>
+        
+        <!-- 安全问题 -->
+        <div class="settings-section">
+            <h3>🛡️ 找回密码安全设置</h3>
+            <p style="color:#aaa">设置安全问题后，可通过邮箱+安全问题找回密码</p>
+            <form method="POST">
+                <div class="form-group">
+                    <label>安全问题</label>
+                    <select name="security_question" id="sec-question" style="padding:12px 16px;border:2px solid rgba(79,195,247,0.3);border-radius:10px;background:rgba(79,195,247,0.06);backdrop-filter:blur(5px);color:#4fc3f7;font-size:1rem;outline:none;transition:all 0.3s;cursor:pointer;width:100%;-webkit-appearance:none;-moz-appearance:none;appearance:none;background-image:url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%234fc3f7%27 stroke-width=%272%27 fill=%27none%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 14px center;padding-right:40px">
+                        <option value="" {% if not user.security_question %}selected{% endif %}>-- 选择问题 --</option>
+                        <option value="mother_name" {% if user.security_question == 'mother_name' %}selected{% endif %}>你母亲的姓名是什么？</option>
+                        <option value="childhood_city" {% if user.security_question == 'childhood_city' %}selected{% endif %}>你童年居住的城市是哪里？</option>
+                        <option value="first_pet" {% if user.security_question == 'first_pet' %}selected{% endif %}>你的第一只宠物叫什么名字？</option>
+                        <option value="favorite_teacher" {% if user.security_question == 'favorite_teacher' %}selected{% endif %}>你学生时代最喜欢老师的姓名？</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>答案</label>
+                    <input type="text" name="security_answer" placeholder="请输入答案" value="{{ user.security_answer if user.security_answer else '' }}">
+                </div>
+                <button type="submit" class="btn-primary" name="action" value="security" style="padding:10px 28px;background:linear-gradient(135deg,rgba(79,195,247,0.2),rgba(79,195,247,0.08));border:2px solid rgba(79,195,247,0.4);border-radius:12px;color:#4fc3f7;font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit;position:relative;overflow:hidden">🛡️ 保存安全问题</button>
+            </form>
+        </div>
+        
+        <!-- 账户信息 -->
+        <div class="settings-section">
+            <h3>👤 账户信息</h3>
+            <table style="width:100%;margin-top:10px">
+                <tr><td style="color:#aaa">用户名</td><td>{{ user.username }}</td></tr>
+                <tr><td style="color:#aaa">邮箱</td><td>{{ user.email }}</td></tr>
+                <tr><td style="color:#aaa">注册时间</td><td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+                <tr><td style="color:#aaa">管理员</td><td>👑 是</td></tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
